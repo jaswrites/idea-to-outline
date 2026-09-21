@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idea → Outline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #1B2027;
+    --ink-soft: #232A33;
+    --paper: #EDE7DA;
+    --paper-dim: #A9A79D;
+    --teal: #5F8B7A;
+    --teal-dim: #3E5C50;
+    --amber: #C9A227;
+    --line: #333B46;
+    --serif: 'Fraunces', serif;
+    --sans: 'Inter', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:var(--sans);
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .app{
+    max-width:920px;
+    margin:0 auto;
+    padding:48px 24px 96px;
+  }
+  .masthead{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:40px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:20px;
+  }
+  .masthead h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:28px;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .masthead .tag{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.06em;
+    color:var(--paper-dim);
+    text-transform:uppercase;
+  }
+  .headline{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:34px;
+    line-height:1.2;
+    max-width:18ch;
+    margin:0 0 20px;
+    letter-spacing:-0.01em;
+  }
+  .intro{
+    font-size:17px;
+    color:var(--paper-dim);
+    max-width:58ch;
+    margin-bottom:40px;
+  }
+  .intro strong{color:var(--paper);font-weight:600;}
+  .landing-block{
+    max-width:58ch;
+    margin-bottom:28px;
+    padding-left:18px;
+    border-left:2px solid var(--line);
+  }
+  .landing-block h3{
+    font-family:var(--mono);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--teal);
+    margin:0 0 8px;
+  }
+  .landing-block p{
+    font-size:15px;
+    color:var(--paper-dim);
+    margin:0;
+    line-height:1.6;
+  }
+  .trust-line{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--paper-dim);
+    margin-top:14px;
+  }
+  .start-btn{
+    font-family:var(--mono);
+    font-size:13px;
+    letter-spacing:0.03em;
+    background:var(--teal);
+    color:var(--ink);
+    border:none;
+    padding:14px 28px;
+    border-radius:2px;
+    cursor:pointer;
+    text-transform:uppercase;
+  }
+  .start-btn:hover{background:#71a08c;}
+
+  /* Layout: rail + content */
+  .workspace{
+    display:grid;
+    grid-template-columns:64px 1fr;
+    gap:32px;
+  }
+  @media (max-width:640px){
+    .workspace{grid-template-columns:32px 1fr; gap:16px;}
+  }
+
+  .rail{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding-top:4px;
+  }
+  .rail-line{
+    position:absolute;
+    top:8px;
+    bottom:8px;
+    left:50%;
+    width:2px;
+    background:var(--line);
+    transform:translateX(-50%);
+  }
+  .rail-node{
+    position:relative;
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:var(--ink-soft);
+    border:2px solid var(--line);
+    margin-bottom:0;
+    z-index:1;
+    transition:all .3s ease;
+  }
+  .rail-node.active{
+    background:var(--amber);
+    border-color:var(--amber);
+    box-shadow:0 0 0 4px rgba(201,162,39,0.15);
+  }
+  .rail-node.done{
+    background:var(--teal);
+    border-color:var(--teal);
+  }
+  .rail-seg{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:60px;
+  }
+  .rail-seg:first-child{justify-content:flex-start;}
+  .rail-seg:last-child{justify-content:flex-end;}
+
+  .content{min-height:420px;}
+
+  .section-label{
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--amber);
+    margin-bottom:8px;
+  }
+  .q-count{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--paper-dim);
+    margin-bottom:24px;
+  }
+  .question{
+    font-family:var(--serif);
+    font-size:24px;
+    font-weight:500;
+    font-style:italic;
+    line-height:1.35;
+    margin-bottom:20px;
+    max-width:56ch;
+  }
+  .hint{
+    font-size:13px;
+    color:var(--paper-dim);
+    margin-bottom:16px;
+    max-width:56ch;
+  }
+  textarea, input[type=text]{
+    width:100%;
+    background:var(--ink-soft);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:var(--sans);
+    font-size:15px;
+    padding:14px 16px;
+    border-radius:3px;
+    resize:vertical;
+    min-height:90px;
+    outline:none;
+  }
+  textarea:focus, input[type=text]:focus{
+    border-color:var(--teal);
+  }
+  .nav-row{
+    display:flex;
+    gap:12px;
+    margin-top:24px;
+    align-items:center;
+  }
+  .btn{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    padding:12px 22px;
+    border-radius:2px;
+    cursor:pointer;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--paper);
+  }
+  .btn.primary{
+    background:var(--teal);
+    border-color:var(--teal);
+    color:var(--ink);
+    font-weight:500;
+  }
+  .btn.primary:hover{background:#71a08c;}
+  .btn:not(.primary):hover{border-color:var(--paper-dim);}
+  .btn.skip{
+    background:none;
+    border:none;
+    color:var(--paper-dim);
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+  /* Output */
+  .outline-card{
+    background:var(--ink-soft);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:32px;
+    margin-bottom:16px;
+  }
+  .outline-card h2{
+    font-family:var(--mono);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--amber);
+    margin:0 0 16px;
+  }
+  .goal-block{
+    border-left:3px solid var(--amber);
+    padding-left:16px;
+    margin-bottom:36px;
+  }
+  .goal-block p{margin:6px 0 0; font-style:italic; color:var(--paper);}
+  .out-section{margin-bottom:28px;}
+  .out-section:last-child{margin-bottom:0;}
+  .out-section h3{
+    font-family:var(--serif);
+    font-size:19px;
+    font-weight:600;
+    margin:0 0 12px;
+    color:var(--paper);
+  }
+  .field{margin-bottom:10px;}
+  .field .k{
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--teal);
+    display:block;
+    margin-bottom:3px;
+  }
+  .field .v{font-size:15px; color:var(--paper);}
+  .checkback{
+    background:rgba(201,162,39,0.08);
+    border:1px solid rgba(201,162,39,0.35);
+    border-radius:4px;
+    padding:24px;
+    margin-top:8px;
+  }
+  .checkback h2{color:var(--amber);}
+  .checkback p{margin:0 0 6px; font-size:14px; color:var(--paper-dim);}
+  .checkback .goal-restate{font-style:italic; color:var(--paper); margin-bottom:14px;}
+  .actions{
+    display:flex;
+    gap:12px;
+    margin-top:24px;
+    flex-wrap:wrap;
+  }
+  .disclosure{
+    margin-top:56px;
+    border-top:1px solid var(--line);
+    padding-top:20px;
+  }
+  .disclosure summary{
+    font-family:var(--mono);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--paper-dim);
+    cursor:pointer;
+    outline:none;
+  }
+  .disclosure[open] summary{color:var(--teal);}
+  .disclosure .body{
+    font-size:14px;
+    color:var(--paper-dim);
+    max-width:60ch;
+    margin-top:14px;
+    line-height:1.6;
+  }
+  .disclosure .body strong{color:var(--paper);}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="masthead">
+    <h1>Idea → Outline</h1>
+    <span class="tag">For stuck fic writers</span>
+  </div>
+
+  <!-- INTRO SCREEN -->
+  <div id="intro">
+    <h2 class="headline">Got a scene idea that won't turn into a scene?</h2>
+    <p class="intro">You know what's supposed to happen. You just can't get it to hang together. This walks you from a loose idea to a structure you can actually write from — in your own words, not mine.</p>
+
+    <div class="landing-block">
+      <h3>What this is</h3>
+      <p>This isn't a blank-page generator, and it won't invent your plot for you. It's a cheat sheet — a set of questions that get you to nail down what you already half-know (what your characters want, what's standing in their way, where things turn), then hands it back to you as a clean outline. If you've got the raw material but not the shape, this is for you.</p>
+    </div>
+
+    <div class="landing-block">
+      <h3>Who made this, and why</h3>
+      <p>I'm an Outer Banks fic writer myself, and I've hit this exact wall more times than I can count. I built this because I wanted it to exist, not because I'm trying to sell you anything. It's free, and it always will be.</p>
+    </div>
+
+    <div class="landing-block">
+      <h3>How it works</h3>
+      <p>Answer a short sequence of questions about your scene. The tool takes your own words and organizes them into a labeled outline — Setup, Tension, Turn, Resolution — plus a check at the end to see if it actually delivers on what you wanted the scene to do. Takes about 5–10 minutes.</p>
+      <p style="margin-top:10px;">I also track anonymous usage (like how many outlines get created) to see if this is actually helping — never what you type. Full details below.</p>
+    </div>
+
+    <button class="start-btn" onclick="startTool()">Start building your outline</button>
+    <p class="trust-line">Runs entirely in your browser. Nothing you type is saved or sent anywhere.</p>
+  </div>
+
+  <!-- TOOL WORKSPACE -->
+  <div class="workspace hidden" id="workspace">
+    <div class="rail" id="rail"></div>
+    <div class="content">
+      <div id="questionView"></div>
+      <div id="outputView" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- Transparency disclosure, always visible -->
+  <details class="disclosure">
+    <summary>Behind the scenes: how it's built and what I track</summary>
+    <div class="body">
+      <strong>How this was built:</strong> I designed the questions and outline logic myself, using AI as a drafting and coding assistant along the way — the same way you might use a search engine or a writing craft book. Nothing here uses AI to generate your outline. Your answers are matched into a fixed template through plain code — think mail-merge, not AI.<br><br>
+      <strong>Your data:</strong> This tool runs entirely in your browser. What you type is never sent anywhere, saved, or logged — not by me, not by anyone. Close the tab and it's gone.<br><br>
+      <strong>Measurement:</strong> I track anonymous, aggregate usage only (like how many outlines get generated) — never the content of what you type. The only exception is the optional feedback box at the very end, if you choose to use it — that's sent to me so I can improve the tool.<br><br>
+      <strong>Questions?</strong> Find me at [Tumblr handle] or [Reddit handle] — happy to talk through how this was built.
+    </div>
+  </details>
+
+</div>
+
+<script>
+const SECTIONS = [
+  { key: "idea", label: "The Idea" },
+  { key: "setup", label: "Setup" },
+  { key: "tension", label: "Tension" },
+  { key: "turn", label: "Turn" },
+  { key: "resolution", label: "Resolution" }
+];
+
+const QUESTIONS = [
+  { id:"q1", section:"idea", text:"In one or two sentences, what's the scene or moment you have in mind?", hint:"Just a rough sketch — you'll build the detail in the next steps." },
+  { id:"q2", section:"idea", text:"What do you want this scene to accomplish — for the story, the characters, or the reader?", hint:"This becomes your check at the very end: does the outline actually deliver on it?" },
+  { id:"q3", section:"setup", text:"Who are the characters involved?" },
+  { id:"q4", section:"setup", text:"What does each of them want in this moment?" },
+  { id:"q5", section:"setup", text:"What's the relationship or history between them going into this scene?" },
+  { id:"q6", section:"setup", text:"What headspace is each character in as the scene starts?", hint:"Is it about the other person — or something else entirely?" },
+  { id:"q7", section:"tension", text:"What is each character avoiding saying or doing, and what's stopping them?" },
+  { id:"q8", section:"turn", text:"What's the moment something shifts — a line, an action, a realization?" },
+  { id:"q9", section:"turn", text:"Is there something specific about this moment that finally makes the shift happen, as opposed to some other time?", hint:"Optional — most useful for slow-burn or recurring-tension scenes.", optional:true },
+  { id:"q10", section:"resolution", text:"What's the emotional tone in the room by the very last line of the scene?" },
+  { id:"q11", section:"resolution", text:"What's changed between the characters, or in the story going forward, because of this scene?" }
+];
+
+let current = 0;
+let answers = {};
+
+function startTool(){
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('workspace').classList.remove('hidden');
+  buildRail();
+  renderQuestion();
+}
+
+function buildRail(){
+  const rail = document.getElementById('rail');
+  rail.innerHTML = '<div class="rail-line"></div>';
+  SECTIONS.forEach((s, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'rail-seg';
+    seg.innerHTML = `<div class="rail-node" data-section="${s.key}"></div>`;
+    rail.appendChild(seg);
+  });
+}
+
+function updateRail(){
+  const currentSection = QUESTIONS[current] ? QUESTIONS[current].section : null;
+  const sectionOrder = SECTIONS.map(s=>s.key);
+  const currentIdx = sectionOrder.indexOf(currentSection);
+  document.querySelectorAll('.rail-node').forEach(node=>{
+    const idx = sectionOrder.indexOf(node.dataset.section);
+    node.classList.remove('active','done');
+    if(idx < currentIdx) node.classList.add('done');
+    else if(idx === currentIdx) node.classList.add('active');
+  });
+}
+
+function renderQuestion(){
+  updateRail();
+  const q = QUESTIONS[current];
+  const section = SECTIONS.find(s=>s.key===q.section);
+  const view = document.getElementById('questionView');
+  const qNum = current+1;
+  view.innerHTML = `
+    <div class="section-label">${section.label}</div>
+    <div class="q-count">Question ${qNum} of ${QUESTIONS.length}${q.optional ? ' · optional' : ''}</div>
+    <div class="question">${q.text}</div>
+    ${q.hint ? `<div class="hint">${q.hint}</div>` : ''}
+    <textarea id="answerInput" placeholder="Type your answer...">${answers[q.id] || ''}</textarea>
+    <div class="nav-row">
+      ${current > 0 ? `<button class="btn" onclick="prevQuestion()">Back</button>` : ''}
+      <button class="btn primary" onclick="nextQuestion()">${current === QUESTIONS.length-1 ? 'See my outline' : 'Next'}</button>
+      ${q.optional ? `<button class="btn skip" onclick="skipQuestion()">Skip this one</button>` : ''}
+    </div>
+  `;
+  document.getElementById('answerInput').focus();
+}
+
+function saveCurrentAnswer(){
+  const q = QUESTIONS[current];
+  const val = document.getElementById('answerInput').value.trim();
+  answers[q.id] = val;
+}
+
+function nextQuestion(){
+  saveCurrentAnswer();
+  if(current < QUESTIONS.length - 1){
+    current++;
+    renderQuestion();
+  } else {
+    renderOutline();
+  }
+}
+
+function skipQuestion(){
+  answers[QUESTIONS[current].id] = '';
+  if(current < QUESTIONS.length - 1){
+    current++;
+    renderQuestion();
+  } else {
+    renderOutline();
+  }
+}
+
+function prevQuestion(){
+  saveCurrentAnswer();
+  current--;
+  renderQuestion();
+}
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function field(label, value){
+  if(!value) return '';
+  return `<div class="field"><span class="k">${label}</span><span class="v">${esc(value)}</span></div>`;
+}
+
+function renderOutline(){
+  document.getElementById('questionView').classList.add('hidden');
+  const out = document.getElementById('outputView');
+  out.classList.remove('hidden');
+
+  out.innerHTML = `
+    <div class="outline-card">
+      ${answers.q2 ? `<div class="goal-block">
+        <span class="k" style="font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--amber);">Your goal for this scene</span>
+        <p>${esc(answers.q2)}</p>
+      </div>` : ''}
+
+      <div class="out-section">
+        <h3>Setup</h3>
+        ${field('What they want', answers.q4)}
+        ${field('History', answers.q5)}
+        ${field('Headspace going in', answers.q6)}
+      </div>
+
+      <div class="out-section">
+        <h3>Tension</h3>
+        ${field("What's being avoided, and why", answers.q7)}
+      </div>
+
+      <div class="out-section">
+        <h3>Turn</h3>
+        ${field('The shift', answers.q8)}
+        ${field('Why now', answers.q9)}
+      </div>
+
+      <div class="out-section">
+        <h3>Resolution</h3>
+        ${field('Emotional landing', answers.q10)}
+        ${field('What changes after', answers.q11)}
+      </div>
+    </div>
+
+    ${answers.q2 ? `<div class="checkback">
+      <h2>Check it against your goal</h2>
+      <p>You said you wanted this scene to:</p>
+      <p class="goal-restate">"${esc(answers.q2)}"</p>
+      <p>Does the outline above actually deliver that? If not, that's worth sitting with before you start writing.</p>
+    </div>` : ''}
+
+    <div class="actions">
+      <button class="btn primary" onclick="copyOutline()">Copy outline</button>
+      <button class="btn" onclick="downloadOutline()">Download as .txt</button>
+      <button class="btn" onclick="restart()">Start a new outline</button>
+    </div>
+  `;
+}
+
+function outlineAsText(){
+  let t = "IDEA → OUTLINE\n\n";
+  if(answers.q2) t += `YOUR GOAL FOR THIS SCENE:\n${answers.q2}\n\n`;
+  t += "SETUP\n";
+  if(answers.q4) t += `What they want: ${answers.q4}\n`;
+  if(answers.q5) t += `History: ${answers.q5}\n`;
+  if(answers.q6) t += `Headspace going in: ${answers.q6}\n`;
+  t += "\nTENSION\n";
+  if(answers.q7) t += `What's being avoided, and why: ${answers.q7}\n`;
+  t += "\nTURN\n";
+  if(answers.q8) t += `The shift: ${answers.q8}\n`;
+  if(answers.q9) t += `Why now: ${answers.q9}\n`;
+  t += "\nRESOLUTION\n";
+  if(answers.q10) t += `Emotional landing: ${answers.q10}\n`;
+  if(answers.q11) t += `What changes after: ${answers.q11}\n`;
+  if(answers.q2) t += `\nCHECK AGAINST YOUR GOAL:\nYou said you wanted this scene to: "${answers.q2}"\nDoes the outline above deliver that?\n`;
+  return t;
+}
+
+function copyOutline(){
+  navigator.clipboard.writeText(outlineAsText()).then(()=>{
+    const btn = event.target;
+    const old = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(()=>{ btn.textContent = old; }, 1500);
+  });
+}
+
+function downloadOutline(){
+  const blob = new Blob([outlineAsText()], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'outline.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function restart(){
+  current = 0;
+  answers = {};
+  document.getElementById('outputView').classList.add('hidden');
+  document.getElementById('questionView').classList.remove('hidden');
+  renderQuestion();
+}
+</script>
+</body>
+</html>
