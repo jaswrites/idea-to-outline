@@ -400,11 +400,10 @@ const SECTIONS = [
 ];
 
 const QUESTIONS = [
-  { id:"q1", section:"idea", text:"In one or two sentences, what's the scene or moment you have in mind?", hint:"Just a rough sketch — you'll build the detail in the next steps." },
+  { id:"q1", section:"idea", text:"What's the scene or moment you have in mind?", hint:"Just a rough sketch — you'll build the detail in the next steps." },
+  { id:"q3", section:"idea", text:"Who are the characters involved, and what's the relationship or history between them going into this scene?" },
   { id:"q2", section:"idea", text:"What do you want this scene to accomplish — for the story, the characters, or the reader?", hint:"This becomes your check at the very end: does the outline actually deliver on it?" },
-  { id:"q3", section:"setup", text:"Who are the characters involved?" },
   { id:"q4", section:"setup", text:"What does each of them want in this moment?" },
-  { id:"q5", section:"setup", text:"What's the relationship or history between them going into this scene?" },
   { id:"q6", section:"setup", text:"What headspace is each character in as the scene starts?", hint:"Is it about the other person — or something else entirely?" },
   { id:"q7", section:"tension", text:"What is each character avoiding saying or doing, and what's stopping them?" },
   { id:"q8", section:"turn", text:"What's the moment something shifts — a line, an action, a realization?" },
@@ -523,11 +522,11 @@ function renderOutline(){
       </div>` : ''}
 
       <div class="out-section">
-        <h3>Setup</h3>
-        ${field('What they want', answers.q4)}
-        ${field('History', answers.q5)}
-        ${field('Headspace going in', answers.q6)}
-      </div>
+  <h3>Setup</h3>
+  ${field('Characters & relationship', answers.q3)}
+  ${field('What they want', answers.q4)}
+  ${field('Headspace going in', answers.q6)}
+</div>
 
       <div class="out-section">
         <h3>Tension</h3>
@@ -566,9 +565,9 @@ function outlineAsText(){
   let t = "IDEA → OUTLINE\n\n";
   if(answers.q2) t += `YOUR GOAL FOR THIS SCENE:\n${answers.q2}\n\n`;
   t += "SETUP\n";
-  if(answers.q4) t += `What they want: ${answers.q4}\n`;
-  if(answers.q5) t += `History: ${answers.q5}\n`;
-  if(answers.q6) t += `Headspace going in: ${answers.q6}\n`;
+if(answers.q3) t += `Characters & relationship: ${answers.q3}\n`;
+if(answers.q4) t += `What they want: ${answers.q4}\n`;
+if(answers.q6) t += `Headspace going in: ${answers.q6}\n`;
   t += "\nTENSION\n";
   if(answers.q7) t += `What's being avoided, and why: ${answers.q7}\n`;
   t += "\nTURN\n";
