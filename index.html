@@ -606,6 +606,166 @@ function restart(){
   document.getElementById('questionView').classList.remove('hidden');
   renderQuestion();
 }
+Feedback form · JS
+// ---------------------------------------------------------------
+// Optional feedback box
+// This is the only part of the tool that sends anything anywhere.
+// Only the rating and the optional comment are sent. The outline
+// and the user's answers always stay in their browser.
+// ---------------------------------------------------------------
+ 
+(function addFeedbackStyles(){
+  const style = document.createElement('style');
+  style.textContent = `
+    .feedback-box{
+      margin-top:40px;
+      padding:24px;
+      border:1px solid var(--line);
+      border-radius:4px;
+      background:var(--ink-soft);
+      max-width:560px;
+    }
+    .feedback-box h2{
+      font-family:var(--mono);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      color:var(--amber);
+      margin:0 0 14px;
+    }
+    .feedback-box .fb-q{
+      font-family:var(--serif);
+      font-size:18px;
+      margin:0 0 12px;
+    }
+    .feedback-box .fb-choices{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .feedback-box .fb-choice{
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:0.03em;
+      text-transform:uppercase;
+      padding:10px 18px;
+      border-radius:2px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      background:transparent;
+      color:var(--paper);
+    }
+    .feedback-box .fb-choice:hover{border-color:var(--paper-dim);}
+    .feedback-box .fb-choice.selected{
+      border-color:var(--teal);
+      background:var(--teal);
+      color:var(--ink);
+    }
+    .feedback-box .fb-label{
+      display:block;
+      font-size:14px;
+      color:var(--paper-dim);
+      margin-bottom:8px;
+    }
+    .feedback-box textarea{min-height:80px;}
+    .feedback-box input.fb-trap{
+      position:absolute;
+      left:-9999px;
+      width:1px;
+      height:1px;
+      min-height:0;
+      opacity:0;
+    }
+    .feedback-box .fb-note{
+      font-size:13px;
+      color:var(--paper-dim);
+      margin:12px 0 16px;
+      line-height:1.5;
+    }
+    .feedback-box .fb-status{
+      font-size:13px;
+      color:var(--paper-dim);
+      margin:12px 0 0;
+      min-height:18px;
+    }
+    .feedback-box .fb-thanks{
+      font-family:var(--serif);
+      font-size:18px;
+      margin:0;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+ 
+function addFeedbackBox(){
+  const out = document.getElementById('outputView');
+  const box = document.createElement('div');
+  box.className = 'feedback-box';
+  box.innerHTML = `
+    <h2>Optional feedback</h2>
+    <p class="fb-q">Did this help?</p>
+    <div class="fb-choices" role="group" aria-label="Did this help?">
+      <button type="button" class="fb-choice" data-rating="yes" aria-pressed="false">Yes</button>
+      <button type="button" class="fb-choice" data-rating="somewhat" aria-pressed="false">Somewhat</button>
+      <button type="button" class="fb-choice" data-rating="no" aria-pressed="false">No</button>
+    </div>
+    <label class="fb-label" for="fbComment">Anything you would change? (optional)</label>
+    <textarea id="fbComment" maxlength="1000"></textarea>
+    <input type="text" id="fbWebsite" class="fb-trap" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p class="fb-note">Only your rating and comment are sent to me. Your outline and your answers never leave your browser. Please do not paste your scene here.</p>
+    <button type="button" class="btn primary" id="fbSend" disabled>Send feedback</button>
+    <p class="fb-status" id="fbStatus" role="status"></p>
+  `;
+  out.appendChild(box);
+ 
+  const sendBtn = box.querySelector('#fbSend');
+  const status = box.querySelector('#fbStatus');
+  const comment = box.querySelector('#fbComment');
+  const trap = box.querySelector('#fbWebsite');
+  let rating = '';
+ 
+  box.querySelectorAll('.fb-choice').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      rating = btn.dataset.rating;
+      box.querySelectorAll('.fb-choice').forEach(function(b){
+        const on = (b === btn);
+        b.classList.toggle('selected', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      sendBtn.disabled = false;
+    });
+  });
+ 
+  sendBtn.addEventListener('click', async function(){
+    sendBtn.disabled = true;
+    status.textContent = 'Sending...';
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: rating,
+          comment: comment.value,
+          website: trap.value
+        })
+      });
+      if (!res.ok) { throw new Error('failed'); }
+      box.innerHTML = '<h2>Optional feedback</h2><p class="fb-thanks">Thank you, this really helps.</p>';
+    } catch (e) {
+      status.textContent = 'Sorry, that did not go through. Please try again later.';
+      sendBtn.disabled = false;
+    }
+  });
+}
+ 
+// Show the feedback box every time an outline is generated.
+const originalRenderOutline = renderOutline;
+renderOutline = function(){
+  originalRenderOutline();
+  addFeedbackBox();
+};
+ 
 </script>
 </body>
 </html>
