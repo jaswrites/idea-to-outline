@@ -1,4 +1,3 @@
-
 // Receives feedback from the tool and emails it to the project inbox via Resend.
 // Only the rating and the optional comment are handled. Nothing is stored or logged.
  
